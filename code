@@ -8,3 +8,63 @@ from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import cross_val_score, train_test_split
 
+file_name = "https://raw.githubusercontent.com/kentj846/insurance-dataset/refs/heads/main/insurance.csv"
+df = pd.read_csv(file_name) #creates a dataframe we can work with from the csv file
+
+print(df.head(10)) # prints the first ten rows of the dataframe
+
+headers = ["age", "gender", "bmi", "no_of_children", "smoker", "region", "charges"]
+df.columns = headers # adds headers to the dataframe
+
+df.replace('?', np.nan, inplace = True) # replaces ? in the data with NaN
+
+print(df.info()) # prints information about the dataframe
+
+is_smoker = df['smoker'].value_counts().idxmax() # returns the most frequent value in the smoker column
+df["smoker"].replace(np.nan, is_smoker, inplace=True) # replaces missing values with most frequent value
+
+mean_age = df['age'].astype('float').mean(axis=0) # find mean age
+df["age"].replace(np.nan, mean_age, inplace=True) # replaces NaN values with the mean age
+
+df[["age","smoker"]] = df[["age","smoker"]].astype("int") # updates data types form object to integer
+
+df[["charges"]] = np.round(df[["charges"]],2) # rounds charges to 2 decimal places  
+
+### Some data analysis ###
+
+sns.regplot(x="bmi", y="charges", data=df, line_kws={"color": "red"}) 
+plt.ylim(0,) # creates a regression plot for charges against bmi
+
+sns.boxplot(x="smoker", y="charges", data=df) # creates a boxplot of charges against smoker
+
+corr_matrix=df.corr()
+sns.heatmap(corr_matrix, annot=True, cmap="coolwarm")
+plt.show() # displays a heatmap
+
+### Regression ###
+
+X = df[['smoker']]
+Y = df['charges']
+lm = LinearRegression()
+lm.fit(X,Y) # fits a linear regression model that predicts charges from smoker
+print(lm.score(X, Y)) # prints R-squared values for the regression
+print(lm.predict([[1],[0]])) # prints model predictions of smoker and non-smoker
+
+Z = df[["age", "gender", "bmi", "no_of_children", "smoker", "region"]]
+lm.fit(Z,Y)
+print(lm.score(Z, Y))
+
+Input=[('scale',StandardScaler()), ('polynomial', PolynomialFeatures(include_bias=False)), ('model', LinearRegression())]
+pipe=Pipeline(Input)
+Z = Z.astype(float)
+pipe.fit(Z,Y)
+ypipe=pipe.predict(Z) # polynomial regression model
+print(r2_score(Y,ypipe))
+
+
+
+
+
+
+
+
